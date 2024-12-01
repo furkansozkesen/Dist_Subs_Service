@@ -1,11 +1,13 @@
 syntax = "proto3";
 
-message Configuration {
-    int32 fault_tolerance_level = 1;
+package server_protos;
 
-    enum Method {
-        STRT = 0;
-        STOP = 1;
+message ServerSettings {
+    int32 redundancyLevel = 1;
+
+    enum Operation {
+        INITIATE = 0;
+        TERMINATE = 1;
     }
-    Method method = 2;
+    Operation operationType = 2;
 }
