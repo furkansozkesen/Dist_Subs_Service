@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+message UserSubscription {
+    int32 userId = 1;
+    string fullName = 2;
+    int64 subscriptionStart = 3;
+    int64 lastInteraction = 4;
+    repeated string preferences = 5;
+    bool isActive = 6;
+
+    enum Action {
+        SUBSCRIBE = 0;
+        UNSUBSCRIBE = 1;
+        UPDATE_INFO = 2;
+        GO_ONLINE = 3;
+        GO_OFFLINE = 4;
+    }
+    Action action = 7;
+}
