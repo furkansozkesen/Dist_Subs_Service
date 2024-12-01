@@ -1,16 +1,18 @@
 syntax = "proto3";
 
-message Message {
-    enum Demand {
-        STRT = 0;
-        CPCTY = 1;
+package server_protos;
+
+message CommunicationMessage {
+    enum RequestType {
+        INITIALIZE = 0;
+        CHECK_CAPACITY = 1;
     }
 
-    Demand demand = 1;
-    Response response = 2;
+    RequestType request = 1;
+    ServerResponse serverResponse = 2;
 
-    enum Response {
-        YEP = 0;
-        NOP = 1;
+    enum ServerResponse {
+        ACCEPTED = 0;
+        DECLINED = 1;
     }
 }
