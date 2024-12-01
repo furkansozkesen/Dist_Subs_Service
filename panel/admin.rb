@@ -1,48 +1,61 @@
 require 'socket'
-require 'google/protobuf'
-require_relative 'Configuration_pb'
-require_relative 'Message_pb'
-require_relative 'Capacity_pb'
+require 'json'
 
-CONFIG_PATH = "dist_subs.conf"
-PORT_LIST = [5001, 5002, 5003]
+class AdminPanel
+  CONFIG_FILE = "dist_subs.conf"
 
-def parse_config
-  tolerance_level = nil
-  File.foreach(CONFIG_PATH) do |line|
-    key, val = line.strip.split('=', 2)
-    tolerance_level = val.to_i if key == 'fault_tolerance_level'
+  def initialize
+    @servers = []
+    load_configuration
   end
-  tolerance_level
+
+  def load_configuration
+    if File.exist?(CONFIG_FILE)
+      config_data = File.read(CONFIG_FILE)
+      config = JSON.parse(config_data)
+      @fault_tolerance_level = config["fault_tolerance_level"]
+      @servers = config["servers"]
+    else
+      puts "Configuration file not found. Please provide #{CONFIG_FILE}."
+    end
+  end
+
+  def send_command_to_servers(command)
+    @servers.each do |server_info|
+      host, port = server_info["host"], server_info["port"]
+      begin
+        socket = TCPSocket.new(host, port)
+        socket.puts(command)
+        response = socket.gets
+        puts "Response from #{host}:#{port} => #{response.strip}"
+        socket.close
+      rescue => e
+        puts "Failed to connect to #{host}:#{port} - #{e.message}"
+      end
+    end
+  end
+
+  def start_servers
+    send_command_to_servers("START")
+  end
+
+  def stop_servers
+    send_command_to_servers("STOP")
+  end
 end
 
-def interact_with_server(connection, tolerance_level)
-  start_msg = Configuration.new(fault_tolerance_level: tolerance_level, method_type: Configuration::MethodType::STRT)
-  connection.write(start_msg.serialize_to_string)
-  puts "Başlatma mesajı sunucuya gönderildi."
+if __FILE__ == $0
+  admin = AdminPanel.new
+  puts "1. Start Servers"
+  puts "2. Stop Servers"
+  choice = gets.chomp.to_i
 
-  response_data = connection.read
-  server_response = Message.decode(response_data)
-  puts "Sunucudan yanıt alındı: İstek -> #{server_response.demand}, Yanıt -> #{server_response.response}"
-
-  capacity_query = Message.new(demand: Message::Demand::CPCTY, response: Message::Response::NULL)
-  connection.write(capacity_query.serialize_to_string)
-  puts "Kapasite sorgulama mesajı sunucuya gönderildi."
-
-  capacity_data = connection.read
-  capacity_info = Capacity.decode(capacity_data)
-  puts "Sunucu kapasite durumu alındı: Durum -> #{capacity_info.serverX_status}, Zaman -> #{capacity_info.timestamp}"
-end
-
-tolerance_level = parse_config
-
-PORT_LIST.each do |port|
-  begin
-    connection = TCPSocket.open("localhost", port)
-    puts "Sunucu bağlantısı sağlandı: Port -> #{port}"
-    interact_with_server(connection, tolerance_level)
-    connection.close
-  rescue Errno::ECONNREFUSED
-    puts "Bağlantı başarısız: Port -> #{port}"
+  case choice
+  when 1
+    admin.start_servers
+  when 2
+    admin.stop_servers
+  else
+    puts "Invalid choice."
   end
 end
