@@ -1,21 +1,17 @@
 syntax = "proto3";
 
-enum Demand {
-  STRT = 0;
-  CPCTY = 1;
-  SUBS = 2;
-  DEL = 3;
-  UPDT = 4;
-  ONLN = 5;
-  OFFL = 6;
+message Communication {
+    enum RequestType {
+        INITIATE = 0;
+        LOAD_STATUS = 1;
+    }
+
+    RequestType request = 1;
+    Reply reply = 2;
+
+    enum Reply {
+        SUCCESS = 0;
+        FAILURE = 1;
+    }
 }
 
-enum Response {
-  YEP = 0;
-  NOP = 1;
-}
-
-message Message {
-  Demand demand = 1;
-  Response response = 2;
-}
