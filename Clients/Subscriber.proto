@@ -1,21 +1,12 @@
 syntax = "proto3";
 
-package client_protos;
-
 message Subscriber {
-    int32 subscriberId = 1;
-    string fullName = 2;
-    int64 joinDate = 3;
-    int64 lastActiveDate = 4;
-    repeated string hobbies = 5;
-    bool isActive = 6;
+    int32 ID = 1;
+    string name_surname = 2;
 
-    enum RequestType {
-        REGISTRATION = 0;
-        DEREGISTRATION = 1;
-        UPDATE = 2;
-        ONLINE = 3;
-        OFFLINE = 4;
+    enum Demand {
+        SUBS = 0;
+        DEL = 1; 
     }
-    RequestType requestType = 7;
+    Demand demand = 3;
 }
