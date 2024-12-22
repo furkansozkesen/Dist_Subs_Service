@@ -1,11 +1,1 @@
-syntax = "proto3";
 
-message SystemConfig {
-    int32 redundancyLevel = 1;
-
-    enum Action {
-        START = 0;
-        TERMINATE = 1;
-    }
-    Action operation = 2;
-}
