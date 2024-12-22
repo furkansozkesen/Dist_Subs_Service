@@ -1,40 +1,48 @@
-package clients;
-
 import java.io.*;
 import java.net.*;
-import client_protos.SubscriberOuterClass;
+import java.util.Scanner;
 
-public class ClientHandler {
-    private static final String SERVER_ADDRESS = "localhost";
-    private static final int SERVER_PORT = 5050;
+import com.google.protobuf.*;
+
+public class Client {
+    private static final String SERVER_HOST = "localhost";
+    private static final int SERVER_PORT = 5001;
 
     public static void main(String[] args) {
-        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT)) {
-            System.out.println("Connected to the server: " + SERVER_ADDRESS + ":" + SERVER_PORT);
-            
-            SubscriberOuterClass.Subscriber newSubscriber = SubscriberOuterClass.Subscriber.newBuilder()
-                .setSubscriberId(1001)
-                .setFullName("Alice Johnson")
-                .setJoinDate(System.currentTimeMillis() / 1000L)
-                .setLastActiveDate(System.currentTimeMillis() / 1000L)
-                .addHobbies("Reading")
-                .addHobbies("Gaming")
-                .setIsActive(true)
-                .setRequestType(SubscriberOuterClass.Subscriber.RequestType.REGISTRATION)
-                .build();
+        try (Socket socket = new Socket(SERVER_HOST, SERVER_PORT)) {
+            System.out.println("Sunucuya bağlandı: " + SERVER_HOST + ":" + SERVER_PORT);
+            InputStream input = socket.getInputStream();
+            OutputStream output = socket.getOutputStream();
 
-            OutputStream outputStream = socket.getOutputStream();
-            newSubscriber.writeTo(outputStream);
-            outputStream.flush();
-            System.out.println("Sent subscription request: " + newSubscriber);
+            System.out.println("Abone ol (A), Aboneliği iptal et (B):");
+            Scanner getUserInput = new Scanner(System.in);
+            String userInput = getUserInput.nextLine();
 
-            InputStream inputStream = socket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String response = reader.readLine();
-            System.out.println("Server Response: " + response);
-
+            if (userInput.equalsIgnoreCase("A")) {
+                // Abone olma talebi oluştur
+                SubscriberOuterClass.Subscriber subscriber = SubscriberOuterClass.Subscriber.newBuilder()
+                        .setID(1)
+                        .setNameSurname("Beyza")
+                        .setDemand(SubscriberOuterClass.Subscriber.Demand.SUBS)
+                        .build();
+                subscriber.writeTo(output);
+                output.flush();
+                System.out.println("Abone olma talebi gönderildi: " + subscriber);
+            } else if (userInput.equalsIgnoreCase("B")) {
+                // Abonelik iptali talebi oluştur
+                SubscriberOuterClass.Subscriber unsubscribeRequest = SubscriberOuterClass.Subscriber.newBuilder()
+                        .setID(3)
+                        .setDemand(SubscriberOuterClass.Subscriber.Demand.DEL)
+                        .build();
+                unsubscribeRequest.writeTo(output);
+                output.flush();
+                System.out.println("Abonelik iptal talebi gönderildi: " + unsubscribeRequest);
+            } else {
+                System.out.println("Geçersiz giriş. Lütfen 'A' veya 'B' giriniz.");
+            }
         } catch (IOException e) {
-            System.err.println("Error communicating with the server: " + e.getMessage());
+            System.out.println("Sunucuya bağlanılamadı: " + SERVER_HOST + ":" + SERVER_PORT);
+            e.printStackTrace();
         }
     }
 }
