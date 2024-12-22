@@ -1,18 +1,1 @@
-syntax = "proto3";
 
-package server_protos;
-
-message CommunicationMessage {
-    enum RequestType {
-        INITIALIZE = 0;
-        CHECK_CAPACITY = 1;
-    }
-
-    RequestType request = 1;
-    ServerResponse serverResponse = 2;
-
-    enum ServerResponse {
-        ACCEPTED = 0;
-        DECLINED = 1;
-    }
-}
