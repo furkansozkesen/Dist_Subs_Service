@@ -1,70 +1,149 @@
-package servers;
-
 import java.io.*;
 import java.net.*;
-import server_protos.*;
-
-public class BaseServer {
-    private final int serverPort;
-
-    public BaseServer(int port) {
-        this.serverPort = port;
-    }
-
-    public void startServer() {
-        try (ServerSocket serverSocket = new ServerSocket(serverPort)) {
-            System.out.println("Server started on port: " + serverPort);
-
-            while (true) {
-                try (Socket clientSocket = serverSocket.accept()) {
-                    System.out.println("Client connected: " + clientSocket.getInetAddress());
-
-                    // Process incoming message
-                    InputStream inputStream = clientSocket.getInputStream();
-                    OutputStream outputStream = clientSocket.getOutputStream();
-
-                    byte[] buffer = new byte[1024];
-                    int bytesRead = inputStream.read(buffer);
-
-                    if (bytesRead > 0) {
-                        CommunicationMessage.RequestType requestType = CommunicationMessage.RequestType.values()[buffer[0]];
-                        handleRequest(requestType, outputStream);
-                    }
-                } catch (IOException e) {
-                    System.err.println("Error handling client connection: " + e.getMessage());
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Failed to start the server: " + e.getMessage());
-        }
-    }
-
-    private void handleRequest(CommunicationMessage.RequestType requestType, OutputStream outputStream) throws IOException {
-        switch (requestType) {
-            case INITIALIZE:
-                System.out.println("Initialization request received.");
-                sendResponse(outputStream, CommunicationMessage.ServerResponse.ACCEPTED);
-                break;
-            case CHECK_CAPACITY:
-                System.out.println("Capacity check request received.");
-                sendResponse(outputStream, CommunicationMessage.ServerResponse.ACCEPTED);
-                break;
-            default:
-                System.out.println("Unknown request type.");
-                sendResponse(outputStream, CommunicationMessage.ServerResponse.DECLINED);
-                break;
-        }
-    }
-
-    private void sendResponse(OutputStream outputStream, CommunicationMessage.ServerResponse response) throws IOException {
-        outputStream.write(response.ordinal());
-        outputStream.flush();
-    }
-}
+import java.util.*;
+import java.util.concurrent.*;
+import com.google.protobuf.*;
 
 public class Server3 {
+    private static final int SERVER_PORT = 5003;
+    private static final int OTHER_SERVER_PORT_1 = 5001;
+    private static final int OTHER_SERVER_PORT_2 = 5002;
+    private static final String ADMIN_HOST = "localhost";
+    private static final int ADMIN_PORT = 5000;
+
+    private static final Map<Integer, String> subscriberBackup = new ConcurrentHashMap<>();
+    private static final int faultToleranceLevel = 2;
+    private static ServerSocket serverSocket;
+
     public static void main(String[] args) {
-        BaseServer server = new BaseServer(5003);
-        server.startServer();
+        try {
+            serverSocket = new ServerSocket(SERVER_PORT);
+            System.out.println("Server3 running on port: " + SERVER_PORT);
+
+            // Thread: Client'tan gelen abonelik bilgilerini al
+            new Thread(Server3::acceptClients).start();
+
+            // Thread: Diğer serverlardan gelen abonelik bilgilerini al
+            new Thread(Server3::receiveUpdatesFromOtherServers).start();
+
+            // Thread: Admin'e kapasite bilgisi gönder
+            new Thread(Server3::sendCapacityPeriodically).start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void acceptClients() {
+        while (true) {
+            try {
+                Socket clientSocket = serverSocket.accept();
+                handleClient(clientSocket);
+            } catch (IOException e) {
+                System.err.println("Hata: Client bağlantısı kabul edilemedi.");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void receiveUpdatesFromOtherServers() {
+        while (true) {
+            try (ServerSocket serverSocket = new ServerSocket(SERVER_PORT + 1000)) { // Dinleme portu
+                while (true) {
+                    try (Socket socket = serverSocket.accept();
+                         BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            String[] parts = line.split(",", 2);
+                            if (parts.length == 2) {
+                                int id = Integer.parseInt(parts[0]);
+                                String name = parts[1];
+                                subscriberBackup.put(id, name);
+                                System.out.println("Subscriber received from another server: " + id + " - " + name);
+                            }
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Error receiving updates from other servers: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void handleClient(Socket clientSocket) {
+        try (InputStream input = clientSocket.getInputStream();
+             OutputStream output = clientSocket.getOutputStream()) {
+
+            SubscriberOuterClass.Subscriber subscriber = SubscriberOuterClass.Subscriber.parseFrom(input);
+
+            if (subscriber.getDemand() == SubscriberOuterClass.Subscriber.Demand.SUBS) {
+                subscriberBackup.put(subscriber.getID(), subscriber.getNameSurname());
+                System.out.println("Subscriber added: " + subscriber);
+                sendToOtherServers(subscriber);
+
+            } else if (subscriber.getDemand() == SubscriberOuterClass.Subscriber.Demand.DEL) {
+                subscriberBackup.remove(subscriber.getID());
+                System.out.println("Subscriber removed: " + subscriber);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void sendToOtherServers(SubscriberOuterClass.Subscriber subscriber) {
+        String message = subscriber.getID() + "," + subscriber.getNameSurname();
+
+        if (faultToleranceLevel >= 1) {
+            sendStringToServer(OTHER_SERVER_PORT_1 + 1000, message);
+        }
+        if (faultToleranceLevel == 2) {
+            sendStringToServer(OTHER_SERVER_PORT_2 + 1000, message);
+        }
+    }
+
+    private static void sendStringToServer(int port, String message) {
+        try (Socket socket = new Socket("localhost", port);
+             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
+
+            writer.println(message);
+
+        } catch (IOException e) {
+            System.err.println("Failed to send string to server on port: " + port);
+            e.printStackTrace();
+        }
+    }
+
+    private static void sendCapacityPeriodically() {
+        while (true) {
+            try {
+                sendCapacityToAdmin();
+                Thread.sleep(8000);
+            } catch (InterruptedException e) {
+                System.err.println("Hata: sendCapacityPeriodically kesildi.");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void sendCapacityToAdmin() {
+        try (Socket socket = new Socket(ADMIN_HOST, 6003);
+             OutputStream output = socket.getOutputStream()) {
+
+            CapacityOuterClass.Capacity capacity = CapacityOuterClass.Capacity.newBuilder()
+                    .setSubscriberCount(subscriberBackup.size())
+                    .build();
+
+            capacity.writeTo(output);
+            output.flush();
+
+            System.out.println("Capacity sent to admin: " + subscriberBackup.size());
+
+        } catch (IOException e) {
+            System.err.println("Failed to send capacity to admin.");
+            e.printStackTrace();
+        }
     }
 }
