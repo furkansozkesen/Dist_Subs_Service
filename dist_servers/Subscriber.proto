@@ -1,21 +1,12 @@
 syntax = "proto3";
 
-package server_protos;
+message Subscriber {
+    int32 ID = 1;
+    string name_surname = 2;
 
-message UserSubscription {
-    int32 userId = 1;
-    string userName = 2;
-    int64 subscriptionDate = 3;
-    int64 lastInteraction = 4;
-    repeated string preferences = 5;
-    bool onlineStatus = 6;
-
-    enum ActionRequest {
-        SUBSCRIBE = 0;
-        UNSUBSCRIBE = 1;
-        MODIFY = 2;
-        MARK_ONLINE = 3;
-        MARK_OFFLINE = 4;
+    enum Demand {
+        SUBS = 0;
+        DEL = 1;
     }
-    ActionRequest action = 7;
+    Demand demand = 3;
 }
