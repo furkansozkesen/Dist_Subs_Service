@@ -1,6 +1,5 @@
 syntax = "proto3";
 
-message ServerLoad {
-    int32 loadPercentage = 1;
-    int64 lastUpdated = 2; // Timestamp in UNIX epoch
+message Capacity {
+    int32 subscriber_count = 1;
 }
