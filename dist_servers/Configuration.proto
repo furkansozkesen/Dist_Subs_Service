@@ -1,13 +1,1 @@
-syntax = "proto3";
 
-package server_protos;
-
-message ServerSettings {
-    int32 redundancyLevel = 1;
-
-    enum Operation {
-        INITIATE = 0;
-        TERMINATE = 1;
-    }
-    Operation operationType = 2;
-}
