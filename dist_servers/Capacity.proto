@@ -1,8 +1,5 @@
 syntax = "proto3";
 
-package server_protos;
-
-message ServerCapacity {
-    int32 currentLoad = 1;
-    int64 timeReported = 2; // Unix time in seconds
+message Capacity {
+    int32 subscriber_count = 1;
 }
