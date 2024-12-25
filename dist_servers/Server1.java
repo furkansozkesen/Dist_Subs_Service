@@ -9,10 +9,10 @@ public class Server1 {
     private static final int OTHER_SERVER_PORT_1 = 5002;
     private static final int OTHER_SERVER_PORT_2 = 5003;
     private static final String ADMIN_HOST = "localhost";
-    private static final int ADMIN_PORT = 5000;
+    private static final int ADMIN_PORT = 4001;
 
     private static final Map<Integer, String> subscriberBackup = new ConcurrentHashMap<>();
-    private static final int faultToleranceLevel = 2;
+    private static final int faultToleranceLevel = 1;
     private static ServerSocket serverSocket;
 
     public static void main(String[] args) {
@@ -129,7 +129,7 @@ public class Server1 {
     }
 
     private static void sendCapacityToAdmin() {
-        try (Socket socket = new Socket(ADMIN_HOST, 6001);
+        try (Socket socket = new Socket(ADMIN_HOST, 4001);
              OutputStream output = socket.getOutputStream()) {
 
             CapacityOuterClass.Capacity capacity = CapacityOuterClass.Capacity.newBuilder()
