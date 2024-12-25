@@ -12,7 +12,7 @@ public class Server1 {
     private static final int ADMIN_PORT = 4001;
 
     private static final Map<Integer, String> subscriberBackup = new ConcurrentHashMap<>();
-    private static final int faultToleranceLevel = 1;
+    private static final int faultToleranceLevel = 2;
     private static ServerSocket serverSocket;
 
     public static void main(String[] args) {
@@ -129,7 +129,7 @@ public class Server1 {
     }
 
     private static void sendCapacityToAdmin() {
-        try (Socket socket = new Socket(ADMIN_HOST, 4001);
+        try (Socket socket = new Socket(ADMIN_HOST, ADMIN_PORT);
              OutputStream output = socket.getOutputStream()) {
 
             CapacityOuterClass.Capacity capacity = CapacityOuterClass.Capacity.newBuilder()
