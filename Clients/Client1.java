@@ -31,7 +31,7 @@ public class Client1 {
             } else if (userInput.equalsIgnoreCase("B")) {
                 // Abonelik iptali talebi oluştur
                 SubscriberOuterClass.Subscriber unsubscribeRequest = SubscriberOuterClass.Subscriber.newBuilder()
-                        .setID(3)
+                        .setID(2)
                         .setDemand(SubscriberOuterClass.Subscriber.Demand.DEL)
                         .build();
                 unsubscribeRequest.writeTo(output);
