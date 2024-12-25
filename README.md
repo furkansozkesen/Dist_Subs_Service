@@ -62,16 +62,24 @@ Client.java dosyalarını derlemek için şu komutu çalıştırın:
 javac -cp ".;com/google/protobuf/protobuf-java-4.28.3.jar" *.java
 ```
 
-## Yaşanan Problemler ve Çözüm Notları
+### 10. Clients Klasöründe Java Dosyalarını Sırasıyla çalıştırma
+Client.java dosyalarını çalıştırmak için şu komutları çalıştırın:
+```sh
+java -cp ".;com/google/protobuf/protobuf-java-4.28.3.jar" Client
+java -cp ".;com/google/protobuf/protobuf-java-4.28.3.jar" Client1
+java -cp ".;com/google/protobuf/protobuf-java-4.28.3.jar" Client2
+```
+
+## Tamamlanan Gorevler:
 - **Ruby Scripti (admin.rb):**
-  - Ruby scripti admin.rb, Server.java dosyalarıyla bağlantı kuramıyor. Bu nedenle, admin scriptinin sunucularla iletişimini sağlamak için ek bir düzenleme yapılması gerekiyor.
-  - Ayrıca, admin.rb ile Python scripti plotter.py arasında da bağlantı sağlanamıyor. Bu iletişim kopukluğunu gidermek için Python ve Ruby arasında bir protokol oluşturulabilir.
+  - Ruby scripti admin.rb, Server.java dosyalarıyla bağlantı kurabiliyor.
+  - Ayrıca, admin.rb ile Python scripti plotter.py arasında da bağlantı sağlanmıştır.
 
 - **Server.java İletişimi:**
   - Server.java dosyaları kendi aralarında başarıyla abone bilgilerini paylaşabiliyor ve yedekleme işlemlerini gerçekleştirebiliyor. Bu, sunucuların birbirleriyle etkili bir şekilde iletişim kurabildiğini göstermektedir.
 
 ## Proje Hakkında Kapanış Notları
-Bu proje, dağıtık sistemler, protokol tasarımı ve çok dilli programlama yaklaşımları hakkında derin bir anlayış sağladı. Her adımda detaylı testler yapıldı ve sistemin belirli kısımları başarıyla çalıştırıldı. Ancak bazı eksiklikler hâlâ giderilmesi gereken alanlar olarak belirgin.
+Bu proje, dağıtık sistemler, protokol tasarımı ve çok dilli programlama yaklaşımları hakkında derin bir anlayış sağladı. Her adımda detaylı testler yapıldı ve sistemin belirli kısımları başarıyla çalıştırıldı.
 
 Projenin geliştirilmesi sırasında büyük bir emek harcanmıştır.
 
