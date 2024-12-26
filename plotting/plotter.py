@@ -1,59 +1,79 @@
 import socket
 from Capacity_pb2 import Capacity
 import matplotlib.pyplot as plt
+import time
 
 HOST = 'localhost'
 PORT = 6000
 
-MAX_LENGTH = 10  # Grafikte gösterilecek maksimum sütun sayısı
-subscriber_counts = []  # Gelen abone sayılarının listesini tutacağız
-MAX_SUBSCRIBER = 100  # Gelen abone sayısını normalize etmek için maksimum değer
+subscriber_counts = {"Server1": 0, "Server2": 0, "Server3": 0}
+last_update_times = {"Server1": time.time(), "Server2": time.time(), "Server3": time.time()}
+DISCONNECT_THRESHOLD = 5  # Seconds
 
-def plot_subscriber_count():
-    plt.clf()  # Grafiği temizle
-    normalized_counts = [count / MAX_SUBSCRIBER for count in subscriber_counts]  # Verileri normalize et
-    x_positions = range(len(normalized_counts))  # X ekseni için sütun konumları
-    plt.bar(x_positions, normalized_counts, color='blue', edgecolor='black')  # Sütun grafiği
+def plot_subscriber_counts():
+    plt.clf()  # Clear the figure
+    servers = list(subscriber_counts.keys())
+    values = list(subscriber_counts.values())
+
+    plt.bar(servers, values, color=['blue', 'green', 'red'], edgecolor='black')
     plt.ylabel('Subscriber Count (Normalized)', fontsize=14)
-    plt.title('Recent Subscriber Counts (0-1 Scale)', fontsize=16)
-    plt.ylim(0, 1.0)  # Y ekseni sınırını 0 ile 1 arasında ayarla
-    plt.xticks(x_positions, [f"{i+1}" for i in x_positions], fontsize=12)
+    plt.title('Subscriber Counts by Server', fontsize=16)
+    plt.ylim(0, 5)
+    plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
     plt.tight_layout()
     plt.draw()
     plt.pause(0.01)
 
+def reset_stale_servers():
+    current_time = time.time()
+    for server, last_update in last_update_times.items():
+        if current_time - last_update > DISCONNECT_THRESHOLD:
+            subscriber_counts[server] = 0  # Reset only the stale server's count
+
 def start_server():
-    plt.ion()  # Etkileşimli modu aç
-    fig = plt.figure()  # Grafik için bir figure oluştur
-    plt.show()  # Grafik penceresini başlat
+    plt.ion()  # Enable interactive mode
+    plt.figure()  # Create a new figure
+    plt.show()  # Display the figure
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
         server_socket.bind((HOST, PORT))
         server_socket.listen(1)
         print(f"Python server listening on {HOST}:{PORT}")
 
-        while True:  # Sürekli dinleme
-            conn, addr = server_socket.accept()
-            with conn:
-                print(f"Connected by {addr}")
-                data = b""  # Gelen veriyi depolamak için
-                while True:
-                    chunk = conn.recv(1024)
-                    data += chunk
-                    if not chunk:  # Veri bitene kadar okumaya devam et
-                        break
-                if data:
-                    capacity = Capacity()
-                    capacity.ParseFromString(data)  # Gelen veriyi parse et
-                    print(f"Received subscriber count: {capacity.subscriber_count}")
-                    subscriber_counts.append(capacity.subscriber_count)  # Abone sayısını listeye ekle
+        while True:
+            reset_stale_servers()
+            plot_subscriber_counts()
 
-                    # Listenin uzunluğunu sınırla
-                    if len(subscriber_counts) > MAX_LENGTH:
-                        subscriber_counts.pop(0)  # En eski veriyi kaldır
+            try:
+                server_socket.settimeout(1)  # Non-blocking accept with timeout
+                conn, addr = server_socket.accept()
+                with conn:
+                    print(f"Connected by {addr}")
+                    data = b""  # Buffer to store incoming data
+                    while True:
+                        chunk = conn.recv(1024)
+                        if not chunk:
+                            break
+                        data += chunk
 
-                    plot_subscriber_count()  # Grafiği güncelle
+                    if data:
+                        capacity = Capacity()
+                        try:
+                            capacity.ParseFromString(data)
+                            print(f"Parsed capacity: {capacity.subscriber_count}")
 
-if __name__ == "__main__":
+                            server_name = f"Server{capacity.server_port % 4000}"
+
+                            if server_name in subscriber_counts:
+                                subscriber_counts[server_name] = capacity.subscriber_count
+                                last_update_times[server_name] = time.time()  # Update last received time
+                                print(f"{server_name}: {capacity.subscriber_count} subscribers")
+
+                        except Exception as e:
+                            print(f"Error parsing data: {e}")
+            except socket.timeout:
+                continue
+
+if _name_ == "_main_":
     start_server()
