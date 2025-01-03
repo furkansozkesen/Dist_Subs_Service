@@ -75,5 +75,5 @@ def start_server():
             except socket.timeout:
                 continue
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     start_server()
