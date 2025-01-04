@@ -1,7 +1,7 @@
 # Dağıtık Abonelik Sistemi (Distributed Subscriber Service)
 
 ## Proje Hakkında
-Bu proje, Java, Ruby ve Python dilleriyle dağıtık bir sistem uygulamasını içerir. Sistem, sunucular arasında iletişim kurarak veri akışını sağlar ve belirli görevleri yerine getirir. Projede kullanılan Google Protocol Buffers (Protobuf) sayesinde farklı diller arasında veri alışverişi kolaylaştırılmıştır.
+Bu proje, Java, Ruby ve Python dilleriyle dağıtık bir sistem uygulamasını içerir. Sistem, sunucular arasında iletişim kurarak veri akışını sağlar ve belirli görevleri yerine getirir. Projede kullanılan Google Protocol Buffers (Protobuf) sayesinde farklı diller arasında veri alışverişi kolaylaştırılmıştır. Her şey Vscode üzerinden gerçekleşmiştir.
 
 ## Kurulum ve Çalıştırma Adımları
 
