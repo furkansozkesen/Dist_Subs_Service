@@ -125,3 +125,4 @@ Projenin geliştirilmesi sırasında büyük bir emek harcanmıştır.
 
 ### SUNUM VİDEOSU LİNKİ:
 [YouTube Video](https://youtu.be/iIuaf6u1aiM)
+https://youtu.be/iIuaf6u1aiM
