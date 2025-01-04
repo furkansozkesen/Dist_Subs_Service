@@ -121,3 +121,7 @@ Projenin geliştirilmesi sırasında büyük bir emek harcanmıştır.
 - [ ] Uranus
 - [ ] Neptune
 - [ ] Comet Haley
+
+
+### SUNUM VİDEOSU LİNKİ:
+[YouTube Video](https://youtu.be/iIuaf6u1aiM)
