@@ -122,6 +122,10 @@ Projenin geliştirilmesi sırasında büyük bir emek harcanmıştır.
 - [ ] Neptune
 - [ ] Comet Haley
 
+### Ekip Üyeleri:
+- 22060652, Furkan Sözkesen
+- 22060400, Eren Irmak
+- 22060382, Yusuf Akçakaya
 
 ### SUNUM VİDEOSU LİNKİ:
 [YouTube Video](https://youtu.be/iIuaf6u1aiM)
